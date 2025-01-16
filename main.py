@@ -59,16 +59,17 @@ operating_systems = ["windows", "linux"]
 user_agent_rotator = UserAgent()
 
 class Balanceamento_de_vpn:
-  def __init__(self, items):
-    self.items = items
-    self.counter = [0] * len(items)
+    def __init__(self, items):
+        self.items = items
+        self.counter = [0] * len(items)
 
-  def selecionar(self):
-    min_count = min(self.counter)
-    candidatos = [i for i, count in enumerate(self.counter) if count == min_count]
-    selecionado = random.choice(candidatos)
-    self.counter[selecionado] += 1
-    return self.items[selecionado]
+    def selecionar(self):
+        min_count = min(self.counter)
+        candidatos = [i for i, count in enumerate(self.counter) if count == min_count]
+        selecionado = random.choice(candidatos)
+        self.counter[selecionado] += 1
+        return self.items[selecionado]
+
 
 def set_headers(user_agent_rotator):
     useragent_pick = user_agent_rotator.random
@@ -82,18 +83,15 @@ def set_headers(user_agent_rotator):
     }
     return headers
 
+
 def get_monitor():
     while True:
-
         ip_check_websites = [
-        
             'https://ipinfo.io/json',
             'http://ipapi.co/json',
             'https://ipwhois.app/json',
-            'https://get.geojs.io/v1/ip/geo.json', 
+            'https://get.geojs.io/v1/ip/geo.json',
             'http://ip-api.com/json/',
-
-
         ]
         random.shuffle(ip_check_websites)  
         headers = set_headers(user_agent_rotator)
@@ -115,6 +113,7 @@ def get_monitor():
             except Exception as error:
                 print(f"Error retrieving {website_pick} monitor info: {error}")
 
+
 def saved_settings_check():
     print("\33[33mTrying to load saved settings...\33[0m")
     try:
@@ -125,6 +124,7 @@ def saved_settings_check():
     else:
         print("\33[33mSaved settings loaded!\n\33[0m")
     return instructions
+
 
 def get_nordvpn_servers_location_and_region(location, region=None):
     try:
@@ -169,9 +169,9 @@ def get_nordvpn_servers_location_and_region(location, region=None):
         print(f"An error occurred: {e}")
         return None
 
+
 def get_nordvpn_servers():
     try:
-            
         serverlist =  BeautifulSoup(requests.get("https://api.nordvpn.com/v1/servers?limit=10000").content,"html.parser")
         site_json=json.loads(serverlist.text)
         filtered_servers = {'windows_names': [], 'linux_names': []}
@@ -188,19 +188,18 @@ def get_nordvpn_servers():
                 pass  # Ignore dictionaries that do not have the 'groups' or 'title' key
 
         return filtered_servers
-    except:
-        pass
+    except Exception as e:
+        print(f"Error while fetching NordVPN servers: {e}")
+        return None
+
 
 def disconect_nord():
     try:
-      #diretorio_script = os.path.dirname(os.path.abspath(__file__))
-      #option_1_path = os.path.join(diretorio_script, 'NordVPN')
+        option_1_path = 'C:/Program Files/NordVPN'
+        subprocess.Popen(["nordvpn", "-d"],shell=True,cwd=option_1_path,stdout=DEVNULL)
+    except Exception as e:
+        print(f"Error disconnecting NordVPN: {e}")
 
-      option_1_path = 'C:/Program Files/NordVPN'
-      subprocess.Popen(["nordvpn", "-d"],shell=True,cwd=option_1_path,stdout=DEVNULL)
-
-    except:
-      pass 
 
 diretorio_script = os.path.dirname(os.path.abspath(__file__))
 
@@ -223,12 +222,11 @@ class RotateVpnThread(QThread):
         self.benchmark_data = self.load_benchmark_data()
         self._is_running = True
 
-
     def load_benchmark_data(self):
         try:
             security = Security(app1=app1)
             respostaname_machine = security.get_machine_info()
-            ref = db.reference(f'benchmark_data_users/{respostaname_machine}')
+            ref = db.reference(f'benchmark_data_users/{{respostaname_machine}}')
             data = ref.get()
             if data:
                 data['total_rotations'] = int(data.get('total_rotations', 0))  # Garantir que é um inteiro
@@ -253,13 +251,12 @@ class RotateVpnThread(QThread):
                 'locations_used': {}
             }
     
-    
     def update_benchmark_data(self):
         security = Security(app1=app1)
         respostaname_machine = security.get_machine_info()
         
         # Carregar dados existentes
-        ref1 = db.reference(f'benchmark_data_users/{respostaname_machine}')
+        ref1 = db.reference(f'benchmark_data_users/{{respostaname_machine}}')
         existing_data = ref1.get() or {
             'total_rotations': 0,
             'time_spent': 0,
@@ -313,7 +310,7 @@ class RotateVpnThread(QThread):
         self.location.emit(f"CHECK YOU KEY WAIT...")
         time.sleep(1)
         self.location.emit(f"CHECK YOU KEY WAIT....")
-        if is_valid == True:
+        if is_valid:
             self.location.emit(f"YOU KEY IS VALID.")
             time.sleep(2)
 
@@ -331,91 +328,78 @@ class RotateVpnThread(QThread):
 
                 input_needed = 2
                 windows_pause = 8
-    
 
                 ###performing system check###
                 opsys = platform.system()
 
                 ##windows##
                 if opsys == "Windows":
-                    # print("\33[33mYou're using Windows.\n"
-                    #       "Performing system check...\n"
-                    #       "###########################\n\33[0m")
-                    #diretorio_script = os.path.dirname(os.path.abspath(__file__))
-                    #option_2_path = os.path.join(diretorio_script, 'NordVPN')
-                    #option_1_path = os.path.join(diretorio_script, 'NordVPN')
                     option_1_path = 'C:/Program Files/NordVPN'
                     option_2_path = 'C:/Program Files (x86)/NordVPN'
                     custom_path = str()
-                    if path.exists(option_1_path) == True:
+                    if path.exists(option_1_path):
                         cwd_path = option_1_path
-                    elif path.exists(option_2_path) == True:
+                    elif path.exists(option_2_path):
                         cwd_path = option_2_path
                     else:
                         custom_path = input("\x1b[93mIt looks like you've installed NordVPN in an uncommon folder. Would you mind telling me which folder? (e.g. D:/customfolder/nordvpn)\x1b[0m")
-                        while path.exists(custom_path) == False:
+                        while not path.exists(custom_path):
                             custom_path = input("\x1b[93mI'm sorry, but this folder doesn't exist. Please double-check your input.\x1b[0m")
-                        while os.path.isfile(custom_path+"/NordVPN.exe") == False:
+                        while not os.path.isfile(custom_path+"/NordVPN.exe"):
                             custom_path = input("\x1b[93mI'm sorry, but the NordVPN application is not located in this folder. Please double-check your input.\x1b[0m")
                         cwd_path = custom_path
-                    #print("NordVPN installation check: \33[92m\N{check mark}\33[0m")
-
-                    #check if nordvpn service is already running in the background
-                    check_service = "nordvpn-service.exe" in (p.name() for p in psutil.process_iter())
-                    if check_service is False:
-                        raise Exception("NordVPN service hasn't been initialized, please start this service in [task manager] --> [services] and restart your script")
-                    #print("NordVPN service check: \33[92m\N{check mark}\33[0m")
-
-                    # start NordVPN app and disconnect from VPN service if necessary#
-                    #print("Opening NordVPN app and disconnecting if necessary...")
-                    open_nord_win = subprocess.Popen(["nordvpn", "-d"],shell=True,cwd=cwd_path,stdout=DEVNULL)
-                    while ("NordVPN.exe" in (p.name() for p in psutil.process_iter())) == False:
-                        time.sleep(windows_pause)
-                    open_nord_win.kill()
-                    #print(": \33[92m\N{check mark}\33[0m")
-                    #print("#####################################")
                     self.location.emit(f"NordVPN app launched.")
 
+                    # Verificação se o serviço NordVPN já está em execução
+                    if not any(p.name() == "nordvpn-service.exe" for p in psutil.process_iter()):
+                        raise Exception("NordVPN service hasn't been initialized. Please start it from the task manager or services and restart this script.")
+
+                    open_nord_win = subprocess.Popen(["nordvpn", "-d"], shell=True, cwd=cwd_path, stdout=DEVNULL)
+                    while not any(p.name() == "NordVPN.exe" for p in psutil.process_iter()):
+                        time.sleep(windows_pause)
+                    open_nord_win.kill()
+
+                # Adicione um fallback para sistemas diferentes
                 else:
                     raise Exception("I'm sorry, NordVPN switcher only works for Windows and Linux machines.")
-
-                diretorio_script = os.path.dirname(os.path.abspath(__file__))
 
                 file_path = os.path.join(diretorio_script,'config', 'countrylist.txt')
 
                 with open(file_path, 'r') as file:
                     areas_list = file.read().split('\n')
-                    country_dict = {'countries':areas_list[0:60],'europe': areas_list[0:36], 'americas': areas_list[36:44],
-                                    'africa east india': areas_list[49:60],'asia pacific': areas_list[49:60],
-                                    'regions australia': areas_list[60:65],'regions canada': areas_list[65:68],
-                                    'regions germany': areas_list[68:70], 'regions india': areas_list[70:72],
-                                    'regions united states': areas_list[72:87],'special groups':areas_list[87:len(areas_list)]}
+                    country_dict = {
+                        'countries': areas_list[0:60],
+                        'europe': areas_list[0:36],
+                        'americas': areas_list[36:44],
+                        'africa east india': areas_list[49:60],
+                        'asia pacific': areas_list[49:60],
+                        'regions australia': areas_list[60:65],
+                        'regions canada': areas_list[65:68],
+                        'regions germany': areas_list[68:70],
+                        'regions india': areas_list[70:72],
+                        'regions united states': areas_list[72:87],
+                        'special groups': areas_list[87:]
+                    }
 
-                ##provide input if needed##
                 flag = False
                 while input_needed > 0:
                     if input_needed == 2:
                         self.location.emit(f"You've entered a list of connection options. Checking list...")
-        
+
                         try:
                             settings_servers = [area.lower() for area in area_input]
                             settings_servers = ",".join(settings_servers)
                         except TypeError:
-                            raise Exception("I expected a list here. Are you sure you've not entered a string or some other object?\n ")
-
+                            raise Exception("I expected a list here. Please check your input.")
                     else:
                         if area_input == 'complete rotation':
                             settings_servers = 'complete rotation'
-                        
-                    if opsys == "Windows":
-                        nordvpn_command = ["nordvpn", "-c"]
-                    if opsys == "Linux":
-                        nordvpn_command = ["nordvpn", "c"]
-                    #create sample of regions from input.#
-                    #1. if quick connect#
+
+                    nordvpn_command = ["nordvpn", "-c"] if opsys == "Windows" else ["nordvpn", "c"]
+                    
                     if settings_servers == "quick":
                         if input_needed == 1:
-                            quickconnect_check = input("\nYou are choosing for the quick connect option. Are you sure? (y/n)\n")
+                            quickconnect_check = input("\nYou are choosing the quick connect option. Are you sure? (y/n)\n")
                             if 'y' in quickconnect_check:
                                 sample_countries = [""]
                                 input_needed = 0
@@ -424,11 +408,10 @@ class RotateVpnThread(QThread):
                             sample_countries = [""]
                             input_needed = 0
                         else:
-                            print("\nYou are choosing for the quick connect option.\n")
-                    #2. if completely random rotation
+                            print("\nYou are choosing the quick connect option.\n")
                     elif settings_servers == 'complete rotation':
-                        print("\nFetching list of all current NordVPN servers...\n")
-                        for i in range(120):
+                        print("\nFetching the list of all current NordVPN servers...\n")
+                        for _ in range(120):
                             try:
                                 filtered_servers = get_nordvpn_servers()
                                 if opsys == "Windows":
@@ -436,84 +419,69 @@ class RotateVpnThread(QThread):
                                     sample_countries = filtered_servers['windows_names']
                                 else:
                                     sample_countries = filtered_servers['linux_names']
-                            except:
+                            except Exception as e:
+                                print(f"Error fetching servers: {e}")
                                 time.sleep(0.5)
                                 continue
                             else:
                                 input_needed = 0
                                 break
                         else:
-                            raise Exception("\nI'm unable to fetch the current NordVPN serverlist. Check your internet connection.\n")
-                    
-                    #3. if provided specific servers. Notation differs for Windows and Linux machines, so two options are checked (first is Windows, second is Linux#
+                            raise Exception("Unable to fetch the current NordVPN server list. Check your internet connection.")
                     elif "#" in settings_servers or re.compile(r'^[a-zA-Z]+[0-9]+').search(settings_servers.split(',')[0]) is not None:
                         if opsys == "Windows":
                             nordvpn_command.append("-n")
                         sample_countries = [area.strip() for area in settings_servers.split(',')]
                         input_needed = 0
                     else:
-                        #3. If connecting to some specific group of servers#
                         if opsys == "Windows":
                             nordvpn_command.append("-g")
                         #3.1 if asked for random sample, pull a sample.#
                         if "random" in settings_servers:
-                            #determine sample size#
                             samplesize = int(re.sub("[^0-9]", "", settings_servers).strip())
-                            #3.1.1 if asked for random regions within country (e.g. random regions from United States,Australia,...)#
                             if "regions" in settings_servers:
                                 try:
                                     sample_countries = country_dict[re.sub("random", "", settings_servers).rstrip('0123456789.- ').lower().strip()]
                                     input_needed = 0
-                                except:
-                                    input("\n\nThere are no specific regions available in this country, please try again.\nPress enter to continue.\n")
+                                except KeyError:
+                                    input("\n\nThere are no specific regions available in this country. Please try again.\nPress enter to continue.\n")
                                     if input_needed == 2:
                                         input_needed = 1
                                         continue
                                 if re.compile(r'[^0-9]').search(settings_servers.strip()):
                                     sample_countries = random.sample(sample_countries, samplesize)
-                            #3.1.2 if asked for random countries within larger region#
                             elif any(re.findall(r'europe|americas|africa east india|asia pacific', settings_servers)):
                                 larger_region = country_dict[re.sub("random|countries", "", settings_servers).rstrip('0123456789.- ').lower().strip()]
                                 sample_countries = random.sample(larger_region,samplesize)
                                 input_needed = 0
-                            #3.1.3 if asked for random countries globally#
+                            elif re.compile(r'[^0-9]').search(settings_servers.strip()):
+                                sample_countries = random.sample(country_dict['countries'], samplesize)
+                                input_needed = 0
                             else:
-                                if re.compile(r'[^0-9]').search(settings_servers.strip()):
-                                    sample_countries = random.sample(country_dict['countries'], samplesize)
-                                    input_needed = 0
-                                else:
-                                    sample_countries = country_dict['countries']
-                                    input_needed = 0
-                        #4. If asked for specific region (e.g. europe)#
+                                sample_countries = country_dict['countries']
+                                input_needed = 0
                         elif settings_servers in country_dict.keys():
                             sample_countries = country_dict[settings_servers]
                             input_needed = 0
-                        #5. If asked for specific countries or regions (e.g.netherlands)#
                         else:
-                            #check for empty input first.#
                             if settings_servers == "":
-                                input("\n\nYou must provide some kind of input.\nPress enter to continue and then type 'help' to view the available options.\n")
+                                input("\n\nYou must provide some kind of input.
+Press enter to continue and then type 'help' to view the available options.
+")
                                 if input_needed == 2:
                                     input_needed = 1
                                     continue
                             else:
-                                sample_countries = [area.strip() for area in settings_servers.split(',')] #take into account possible superfluous spaces#
+                                sample_countries = [area.strip() for area in settings_servers.split(',')]
                                 approved_regions = 0
                                 for region in sample_countries:
                                     if region in [area.lower() for area in areas_list]:
-                                        approved_regions = approved_regions + 1
-                                        pass
-                                    else:
-                                        #input("\n\nThe region/group " + region + " is not available. Please check for spelling errors.\nPress enter to continue.\n")
-                                        if input_needed == 2:
-                                            input_needed = 1
-                                            continue
+                                        approved_regions += 1
                                 if approved_regions == len(sample_countries):
                                     input_needed = 0
 
-                ##fetch current ip to prevent ip leakage when rotating VPN##
                 for i in range(59):
-                    if flag == True:
+                    if flag:
                         break
                     try:
                         og_ip, cidade, regiao, pais, fuso_horario, organizacao = get_monitor() 
@@ -523,37 +491,17 @@ class RotateVpnThread(QThread):
                     else:
                         break
                 else:
-                    raise Exception("Can't fetch current ip, even after retrying... Check your internet connection.")
+                    raise Exception("Can't fetch current IP, even after retrying. Check your internet connection.")
 
-                ##if user does not use preloaded settings##
                 if "instructions" not in locals():
-                    #1.add underscore if spaces are present on Linux os#
                     for number,element in enumerate(sample_countries):
                         if element.count(" ") > 0 and opsys == "Linux":
-                                sample_countries[number] = re.sub(" ","_",element)
-                    else:
-                        pass
-                    #2.create instructions dict object#
+                            sample_countries[number] = re.sub(" ","_",element)
                     instructions = {'opsys':opsys,'command':nordvpn_command,'settings':sample_countries,'original_ip':og_ip}
                     if opsys == "Windows":
                         instructions['cwd_path'] = cwd_path
-
-                    #3.save the settings if requested into .txt file in project folder#
-                    if save == 1:
-                        print("\nSaving settings in project folder...\n")
-                        try:
-                            os.remove("settings_nordvpn.txt")
-                        except FileNotFoundError:
-                            pass
-                        instructions_write = json.dumps(instructions)
-                        f = open("settings_nordvpn.txt", "w")
-                        f.write(instructions_write)
-                        f.close()
-
-                self.location.emit(f"Done!")
-                return instructions
-
-
+                    self.location.emit(f"Done!")
+                    return instructions
     
             vpn_options = {
                 "America/New_York": ["New York,Manassas"],
@@ -576,15 +524,14 @@ class RotateVpnThread(QThread):
                 "America/Vancouver": ["Atlanta,Seattle"],
                 "Europe/Paris": ["Miami,Buffalo"],
                 "North_America/Ottawa": ["Salt Lake City,New York,Phoenix"],
-                "North_America/Havana": ["Phoenix,Seattle"],
+                "North_America/Havana": ["Phoenix,Seattle"]
             }
-
+    
             for i in range(self.rotation_count):
                 if not self._is_running:
                     break
 
                 self.progress.emit(int(100 * i / self.rotation_count))
-                
                 if self.rotate_in_usa:
                     timezone = random.choice(list(vpn_options.keys()))
                     vpn_options_for_timezone = vpn_options.get(timezone, [])
@@ -596,17 +543,10 @@ class RotateVpnThread(QThread):
                 if self.rotate_complete:    
                     self.location.emit('Rotate complete')
                     vpn_instruction = initialize_VPN(area_input='complete rotation')
-
                 if self.rotate_in_canada:    
                     self.location.emit('Rotate in CANADA')
                     vpn_instruction = initialize_VPN(area_input=["Vancouver,Montreal,Toronto"])
-
-
-
-                #rotate_VPN(instructions=vpn_instruction)
                 self.benchmark_data['total_rotations'] += 1
-                
-
                 instructions = vpn_instruction
                 google_check = 0
                 if instructions is None:
@@ -616,7 +556,6 @@ class RotateVpnThread(QThread):
                 command = instructions['command']
                 settings = instructions['settings']
                 og_ip = instructions['original_ip']
-
                 if opsys == "Windows":
                     cwd_path = instructions['cwd_path']
 
@@ -624,36 +563,29 @@ class RotateVpnThread(QThread):
                     try:
                         current_ip, cidade, regiao, pais, fuso_horario, organizacao = get_monitor() 
                     except urllib.error.URLError:
-                        self.location.emit(f"Can't fetch current ip. Retrying...")
-                    
+                        self.location.emit(f"Can't fetch current IP. Retrying...")
                         time.sleep(10)
                         continue
                     else:
-                        self.location.emit(f"Your current ip-address is: {current_ip}")
-
+                        self.location.emit(f"Your current IP address is: {current_ip}")
                         time.sleep(2)
                         break
                 else:
-                    self.location.emit(f"Can't fetch current ip, even after retrying... Check your internet connection.")
-                    
-                if not self._is_running:
-                    break
+                    self.location.emit(f"Can't fetch current IP, even after retrying. Check your internet connection.")
+                    if not self._is_running:
+                        break
                 for i in range(5):
                     if len(settings) > 1:
                         settings_pick = list([random.choice(settings)])
                     else:
                         settings_pick = settings
-
                     input = command + settings_pick
-
                     if settings[0] == "":
                         print("\nConnecting you to the best possible server (quick connect option)...")
                     else:
                         self.location.emit(f"Connecting: {settings_pick[0]}")
-                            
                     if not self._is_running:
                         break
-        
                     try:
                         if opsys == "Windows":
                             new_connection = subprocess.Popen(input, shell=True, cwd=cwd_path)
@@ -661,16 +593,14 @@ class RotateVpnThread(QThread):
                         else:
                             new_connection = check_output(input)
                             print("Found a server! You're now on "+re.search('(?<=You are connected to )(.*)(?=\()', str(new_connection))[0].strip())
-                    except:
-                        self.location.emit(f"An unknown error occurred")
-
-                        
+                    except Exception as e:
+                        self.location.emit(f"An unknown error occurred: {e}")
                     if not self._is_running:
                         break
                     for i in range(12):
                         try:
                             new_ip, cidade, regiao, pais, fuso_horario, organizacao = get_monitor() 
-                        except:
+                        except Exception:
                             time.sleep(5)
                             continue
                         else:
@@ -681,18 +611,16 @@ class RotateVpnThread(QThread):
                                 break
                     else:
                         pass
-
                     if new_ip in [current_ip,og_ip]:
-                        print("ip-address hasn't changed. Retrying...\n")
+                        print("IP address hasn't changed. Retrying...
+")
                         time.sleep(10)
                         continue
                     else:
-                        self.location.emit(f"Conected! Enjoy your new server.")
+                        self.location.emit(f"Connected! Enjoy your new server.")
                         time.sleep(3)
-
                     if not self._is_running:
                         break
-
                     if google_check == 1:
                         print("\n\33[33mPerforming captcha-check on Google search and Youtube...\n"
                             "---------------------------\33[0m")
@@ -709,18 +637,17 @@ class RotateVpnThread(QThread):
                                 print("Google throws a captcha. I'll pick a different server...")
                                 time.sleep(5)
                                 continue
-                        except:
+                        except Exception:
                             print("Can't load Google page. I'll pick a different server...")
                             time.sleep(5)
                             continue
                         else:
-                            print("Google and YouTube don't throw any Captcha's: \33[92m\N{check mark}\33[0m")
+                            print("Google and YouTube don't throw any Captchas: \33[92m\N{check mark}\33[0m")
                             break
                     else:
                         break
                 self.benchmark_data['time_spent'] += time.time() - start_time
                 self.update_benchmark_data()
-
                 for _ in range(self.interval):
                     if not self._is_running:
                         disconect_nord()
@@ -730,19 +657,16 @@ class RotateVpnThread(QThread):
             self.location.emit(f"N-V-A-R Stop")    
             self.progress.emit(100)
             self.finished.emit()
-
-
-        elif is_valid == False:
-            self.location.emit(f"YOU KEY IS Expired.")
+        elif not is_valid:
+            self.location.emit(f"YOUR KEY IS Expired.")
             time.sleep(2)
         else:
-            # Registra o computador para o serial
             try:
                 security.register_computer(serial, computer_id, start_date)
-                self.location.emit(f"YOU KEY IS Registred. Please try new")
+                self.location.emit(f"YOUR KEY IS Registered. Please try again")
                 time.sleep(2)
             except Exception as e:
-                print(f"Erro: {e}")
+                print(f"Error: {e}")
 
     def stop(self):
         self._is_running = False
@@ -806,12 +730,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Botão de benchmark global
         self.globalBenchmarkButton = self.findChild(QPushButton, 'globalBenchmarkButton')
         self.globalBenchmarkButton.clicked.connect(self.on_global_benchmark_button_clicked)
+
         # Verificando se os checkboxes foram encontrados
-    
         self.usaCheckBox.stateChanged.connect(self.update_checkboxes)
-    
         self.canadacheckBox.stateChanged.connect(self.update_checkboxes)
-    
         self.completecheckBox.stateChanged.connect(self.update_checkboxes)
 
         self.load_config()
@@ -821,19 +743,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         flagusaCheckBox = self.usaCheckBox.isChecked()
         flagcompletecheckBox= self.completecheckBox.isChecked()
 
-        if flagcanadacheckBox == True:
-            
+        if flagcanadacheckBox:   
             self.usaCheckBox.setChecked(False)
             self.completecheckBox.setChecked(False)
 
-        if flagusaCheckBox == True:
+        if flagusaCheckBox:
             self.canadacheckBox.setChecked(False)
             self.completecheckBox.setChecked(False)
 
-        if flagcompletecheckBox == True:
+        if flagcompletecheckBox:
             self.canadacheckBox.setChecked(False)
             self.usaCheckBox.setChecked(False)
-
 
     def on_rotate_button_clicked(self):
         rotation_count = self.rotationCountSpinBox.value()
@@ -843,22 +763,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rotate_in_complete = self.completecheckBox.isChecked()
         nvar_key = self.lineEdit.text()
 
-
-
-
-        # security = Security(app1=app1)
-
-        # # Verificação de licença com a API da Sellix
-        # license_key = nvar_key
-        # hardware_id = security.get_computer_id()
-        # response = security.check_license(license_key, hardware_id)
-
         self.thread = RotateVpnThread(rotation_count, interval, rotate_in_usa, rotate_in_canada, rotate_in_complete, nvar_key)
         self.thread.progress.connect(self.update_progress)
         self.thread.location.connect(self.update_location)
         self.thread.finished.connect(self.on_rotation_finished)
         self.thread.start()
-
 
     def on_stop_button_clicked(self):
         if hasattr(self, 'thread') and self.thread.isRunning():
@@ -896,7 +805,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             security = Security(app1=app1)
             respostaname_machine = security.get_machine_info()
-            ref1 = db.reference(f'save_settings_users/{respostaname_machine}', app=app1)
+            ref1 = db.reference(f'save_settings_users/{{respostaname_machine}}', app=app1)
             data1 = ref1.get()                         
             rotation_count = data1["rotation_count"]
             interval = data1["interval"]
@@ -904,11 +813,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             rotate_in_canada = data1["rotate_in_canada"]
             key_save = data1["key_save"]
             rotate_complete = data1["rotate_complete"]
-
+            
             def str_to_bool(s):
                 return s.lower() in ['true', '1', 't', 'y', 'yes']
 
-            #config = json.load(ref1)
             self.rotationCountSpinBox.setValue(int(rotation_count))
             self.intervalSpinBox.setValue(int(interval))
             self.usaCheckBox.setChecked(str_to_bool(rotate_in_usa))
@@ -928,11 +836,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "rotate_in_canada": f"{self.canadacheckBox.isChecked()}",
             "key_save": f"{self.lineEdit.text()}",
             "rotate_complete": f"{self.completecheckBox.isChecked()}",
-            
-
             }
             ref1.child(controle_das_funcao2).set(controle_das_funcao_info_2)
-
 
     def save_config(self):
         security = Security(app1=app1)
@@ -947,13 +852,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         "rotate_in_canada": f"{self.canadacheckBox.isChecked()}",
         "key_save": f"{self.lineEdit.text()}",
         "rotate_complete": f"{self.completecheckBox.isChecked()}",
-        
-
         }
         ref1.child(controle_das_funcao2).set(controle_das_funcao_info_2)
 
-
-            
     def closeEvent(self, event):
         self.save_config()
         event.accept()
@@ -969,7 +870,7 @@ class BenchmarkWindow(QtWidgets.QWidget, Ui_BenchmarkWindow):
         try:
             security = Security(app1=app1)
             respostaname_machine = security.get_machine_info()
-            ref = db.reference(f'benchmark_data_users/{respostaname_machine}')
+            ref = db.reference(f'benchmark_data_users/{{respostaname_machine}}')
             data = ref.get()
             if data:
                 self.totalRotationsLabel.setText(f"Total Rotations: {data.get('total_rotations', 0)}")
@@ -997,7 +898,6 @@ class GlobalBenchmarkWindow(QWidget, Ui_GlobalBenchmarkWindow):
         for key in keys:
             user_data = ref.child(key).get()
             total_rotations += int(user_data.get('total_rotations', 0))
-            
             time_spent = user_data.get('time_spent', 0)
             if isinstance(time_spent, str):
                 time_spent = float(time_spent.replace(' seconds', ''))
