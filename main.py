@@ -7,13 +7,12 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QProgressBar
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from os import path
-from subprocess import check_output,DEVNULL
+from subprocess import check_output, DEVNULL
 from bs4 import BeautifulSoup
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 from firebase_admin import credentials, initialize_app, storage, db, delete_app
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 import subprocess
 import psutil
 import re
@@ -22,35 +21,16 @@ import urllib
 import requests
 import json
 import ctypes
-import firebase_admin
 import hashlib
 import uuid
-import json
-from firebase_admin import credentials, db, initialize_app
-import hashlib
 import os
-import random
 import random
 import sys
 import threading
-import os
-import platform
-import subprocess
-import psutil
-import re
-import time
-import urllib
-import requests
-import json
 from datetime import datetime, timedelta
-import firebase_admin
 import ssl
-import time
 from fake_useragent import UserAgent
 
-import requests
-import json
-from bs4 import BeautifulSoup
 from config.keys import *
 from config.Security import *
 
@@ -59,16 +39,16 @@ operating_systems = ["windows", "linux"]
 user_agent_rotator = UserAgent()
 
 class Balanceamento_de_vpn:
-  def __init__(self, items):
-    self.items = items
-    self.counter = [0] * len(items)
+    def __init__(self, items):
+        self.items = items
+        self.counter = [0] * len(items)
 
-  def selecionar(self):
-    min_count = min(self.counter)
-    candidatos = [i for i, count in enumerate(self.counter) if count == min_count]
-    selecionado = random.choice(candidatos)
-    self.counter[selecionado] += 1
-    return self.items[selecionado]
+    def selecionar(self):
+        min_count = min(self.counter)
+        candidatos = [i for i, count in enumerate(self.counter) if count == min_count]
+        selecionado = random.choice(candidatos)
+        self.counter[selecionado] += 1
+        return self.items[selecionado]
 
 def set_headers(user_agent_rotator):
     useragent_pick = user_agent_rotator.random
@@ -84,16 +64,12 @@ def set_headers(user_agent_rotator):
 
 def get_monitor():
     while True:
-
         ip_check_websites = [
-        
             'https://ipinfo.io/json',
             'http://ipapi.co/json',
             'https://ipwhois.app/json',
             'https://get.geojs.io/v1/ip/geo.json', 
             'http://ip-api.com/json/',
-
-
         ]
         random.shuffle(ip_check_websites)  
         headers = set_headers(user_agent_rotator)
@@ -109,7 +85,6 @@ def get_monitor():
                 regiao = data.get('region')
                 pais = data.get('country')
                 organizacao = data.get('org')
-                codigo_postal = data.get('postal')
                 fuso_horario = data.get('timezone')
                 return ip, cidade, regiao, pais, fuso_horario, organizacao
             except Exception as error:
@@ -171,11 +146,10 @@ def get_nordvpn_servers_location_and_region(location, region=None):
 
 def get_nordvpn_servers():
     try:
-            
-        serverlist =  BeautifulSoup(requests.get("https://api.nordvpn.com/v1/servers?limit=10000").content,"html.parser")
+        serverlist = BeautifulSoup(requests.get("https://api.nordvpn.com/v1/servers?limit=10000").content,"html.parser")
         site_json=json.loads(serverlist.text)
         filtered_servers = {'windows_names': [], 'linux_names': []}
-        
+
         for specific_dict in site_json:
             try:
                 groups = specific_dict.get('groups', [])  # Verifica se 'groups' está presente
@@ -193,14 +167,10 @@ def get_nordvpn_servers():
 
 def disconect_nord():
     try:
-      #diretorio_script = os.path.dirname(os.path.abspath(__file__))
-      #option_1_path = os.path.join(diretorio_script, 'NordVPN')
-
-      option_1_path = 'C:/Program Files/NordVPN'
-      subprocess.Popen(["nordvpn", "-d"],shell=True,cwd=option_1_path,stdout=DEVNULL)
-
+        option_1_path = 'C:/Program Files/NordVPN'
+        subprocess.Popen(["nordvpn", "-d"], shell=True, cwd=option_1_path, stdout=DEVNULL)
     except:
-      pass 
+        pass 
 
 diretorio_script = os.path.dirname(os.path.abspath(__file__))
 
@@ -222,7 +192,6 @@ class RotateVpnThread(QThread):
         self.nvar_keyy = nvar_key
         self.benchmark_data = self.load_benchmark_data()
         self._is_running = True
-
 
     def load_benchmark_data(self):
         try:
@@ -252,12 +221,11 @@ class RotateVpnThread(QThread):
                 'time_spent': 0,
                 'locations_used': {}
             }
-    
-    
+
     def update_benchmark_data(self):
         security = Security(app1=app1)
         respostaname_machine = security.get_machine_info()
-        
+
         # Carregar dados existentes
         ref1 = db.reference(f'benchmark_data_users/{respostaname_machine}')
         existing_data = ref1.get() or {
@@ -265,17 +233,17 @@ class RotateVpnThread(QThread):
             'time_spent': 0,
             'locations_used': {}
         }
-        
+
         # Atualizar dados existentes
         self.benchmark_data['total_rotations'] = int(existing_data.get('total_rotations', 0)) + 1
         self.benchmark_data['time_spent'] += float(existing_data.get('time_spent', 0))
-        
+
         ip, cidade, regiao, pais, fuso_horario, organizacao = get_monitor()
         self.benchmark_data['locations_used'][regiao] = self.benchmark_data['locations_used'].get(regiao, 0) + 1
-        
+
         # Salvar dados atualizados
         ref1.set(self.benchmark_data)
-        
+
         # Atualizar global_benchmark
         global_ref = db.reference('global_benchmark')
         global_data = global_ref.child(respostaname_machine).get() or {
@@ -305,7 +273,7 @@ class RotateVpnThread(QThread):
         computer_id = security.get_computer_id()
         start_date = security.check_license_time(key, computer_id)
         is_valid = security.check_serial(serial, computer_id, start_date, order_id)
-        
+
         self.location.emit(f"CHECK YOU KEY WAIT.")
         time.sleep(1)
         self.location.emit(f"CHECK YOU KEY WAIT..")
@@ -331,19 +299,12 @@ class RotateVpnThread(QThread):
 
                 input_needed = 2
                 windows_pause = 8
-    
 
                 ###performing system check###
                 opsys = platform.system()
 
                 ##windows##
                 if opsys == "Windows":
-                    # print("\33[33mYou're using Windows.\n"
-                    #       "Performing system check...\n"
-                    #       "###########################\n\33[0m")
-                    #diretorio_script = os.path.dirname(os.path.abspath(__file__))
-                    #option_2_path = os.path.join(diretorio_script, 'NordVPN')
-                    #option_1_path = os.path.join(diretorio_script, 'NordVPN')
                     option_1_path = 'C:/Program Files/NordVPN'
                     option_2_path = 'C:/Program Files (x86)/NordVPN'
                     custom_path = str()
@@ -358,22 +319,17 @@ class RotateVpnThread(QThread):
                         while os.path.isfile(custom_path+"/NordVPN.exe") == False:
                             custom_path = input("\x1b[93mI'm sorry, but the NordVPN application is not located in this folder. Please double-check your input.\x1b[0m")
                         cwd_path = custom_path
-                    #print("NordVPN installation check: \33[92m\N{check mark}\33[0m")
 
-                    #check if nordvpn service is already running in the background
+                    # checking nordvpn service is running
                     check_service = "nordvpn-service.exe" in (p.name() for p in psutil.process_iter())
                     if check_service is False:
                         raise Exception("NordVPN service hasn't been initialized, please start this service in [task manager] --> [services] and restart your script")
-                    #print("NordVPN service check: \33[92m\N{check mark}\33[0m")
 
-                    # start NordVPN app and disconnect from VPN service if necessary#
-                    #print("Opening NordVPN app and disconnecting if necessary...")
-                    open_nord_win = subprocess.Popen(["nordvpn", "-d"],shell=True,cwd=cwd_path,stdout=DEVNULL)
+                    # start NordVPN app and disconnect from VPN service if necessary
+                    open_nord_win = subprocess.Popen(["nordvpn", "-d"], shell=True, cwd=cwd_path, stdout=DEVNULL)
                     while ("NordVPN.exe" in (p.name() for p in psutil.process_iter())) == False:
                         time.sleep(windows_pause)
                     open_nord_win.kill()
-                    #print(": \33[92m\N{check mark}\33[0m")
-                    #print("#####################################")
                     self.location.emit(f"NordVPN app launched.")
 
                 else:
@@ -396,7 +352,7 @@ class RotateVpnThread(QThread):
                 while input_needed > 0:
                     if input_needed == 2:
                         self.location.emit(f"You've entered a list of connection options. Checking list...")
-        
+
                         try:
                             settings_servers = [area.lower() for area in area_input]
                             settings_servers = ",".join(settings_servers)
@@ -406,7 +362,7 @@ class RotateVpnThread(QThread):
                     else:
                         if area_input == 'complete rotation':
                             settings_servers = 'complete rotation'
-                        
+
                     if opsys == "Windows":
                         nordvpn_command = ["nordvpn", "-c"]
                     if opsys == "Linux":
@@ -444,7 +400,7 @@ class RotateVpnThread(QThread):
                                 break
                         else:
                             raise Exception("\nI'm unable to fetch the current NordVPN serverlist. Check your internet connection.\n")
-                    
+
                     #3. if provided specific servers. Notation differs for Windows and Linux machines, so two options are checked (first is Windows, second is Linux#
                     elif "#" in settings_servers or re.compile(r'^[a-zA-Z]+[0-9]+').search(settings_servers.split(',')[0]) is not None:
                         if opsys == "Windows":
@@ -504,7 +460,6 @@ class RotateVpnThread(QThread):
                                         approved_regions = approved_regions + 1
                                         pass
                                     else:
-                                        #input("\n\nThe region/group " + region + " is not available. Please check for spelling errors.\nPress enter to continue.\n")
                                         if input_needed == 2:
                                             input_needed = 1
                                             continue
@@ -553,8 +508,6 @@ class RotateVpnThread(QThread):
                 self.location.emit(f"Done!")
                 return instructions
 
-
-    
             vpn_options = {
                 "America/New_York": ["New York,Manassas"],
                 "America/Chicago": ["Chicago,Saint Louis"],
@@ -601,11 +554,7 @@ class RotateVpnThread(QThread):
                     self.location.emit('Rotate in CANADA')
                     vpn_instruction = initialize_VPN(area_input=["Vancouver,Montreal,Toronto"])
 
-
-
-                #rotate_VPN(instructions=vpn_instruction)
                 self.benchmark_data['total_rotations'] += 1
-                
 
                 instructions = vpn_instruction
                 google_check = 0
@@ -664,7 +613,6 @@ class RotateVpnThread(QThread):
                     except:
                         self.location.emit(f"An unknown error occurred")
 
-                        
                     if not self._is_running:
                         break
                     for i in range(12):
@@ -731,7 +679,6 @@ class RotateVpnThread(QThread):
             self.progress.emit(100)
             self.finished.emit()
 
-
         elif is_valid == False:
             self.location.emit(f"YOU KEY IS Expired.")
             time.sleep(2)
@@ -784,10 +731,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Check box de rotação nos EUA
         self.usaCheckBox = self.findChild(QCheckBox, 'usaCheckBox')
 
-        # Check box de rotação nos canada
+        # Check box de rotação no canadá
         self.canadacheckBox = self.findChild(QCheckBox, 'canadacheckBox')
 
-        # Check box de rotação nos complete
+        # Check box de rotação no complete
         self.completecheckBox = self.findChild(QCheckBox, 'completecheckBox')
 
         # Campo de entrada para chave Nvar
@@ -834,7 +781,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.canadacheckBox.setChecked(False)
             self.usaCheckBox.setChecked(False)
 
-
     def on_rotate_button_clicked(self):
         rotation_count = self.rotationCountSpinBox.value()
         interval = self.intervalSpinBox.value()
@@ -843,22 +789,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rotate_in_complete = self.completecheckBox.isChecked()
         nvar_key = self.lineEdit.text()
 
-
-
-
-        # security = Security(app1=app1)
-
-        # # Verificação de licença com a API da Sellix
-        # license_key = nvar_key
-        # hardware_id = security.get_computer_id()
-        # response = security.check_license(license_key, hardware_id)
-
         self.thread = RotateVpnThread(rotation_count, interval, rotate_in_usa, rotate_in_canada, rotate_in_complete, nvar_key)
         self.thread.progress.connect(self.update_progress)
         self.thread.location.connect(self.update_location)
         self.thread.finished.connect(self.on_rotation_finished)
         self.thread.start()
-
 
     def on_stop_button_clicked(self):
         if hasattr(self, 'thread') and self.thread.isRunning():
@@ -908,7 +843,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             def str_to_bool(s):
                 return s.lower() in ['true', '1', 't', 'y', 'yes']
 
-            #config = json.load(ref1)
             self.rotationCountSpinBox.setValue(int(rotation_count))
             self.intervalSpinBox.setValue(int(interval))
             self.usaCheckBox.setChecked(str_to_bool(rotate_in_usa))
@@ -928,11 +862,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "rotate_in_canada": f"{self.canadacheckBox.isChecked()}",
             "key_save": f"{self.lineEdit.text()}",
             "rotate_complete": f"{self.completecheckBox.isChecked()}",
-            
-
             }
             ref1.child(controle_das_funcao2).set(controle_das_funcao_info_2)
-
 
     def save_config(self):
         security = Security(app1=app1)
@@ -947,13 +878,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         "rotate_in_canada": f"{self.canadacheckBox.isChecked()}",
         "key_save": f"{self.lineEdit.text()}",
         "rotate_complete": f"{self.completecheckBox.isChecked()}",
-        
-
         }
         ref1.child(controle_das_funcao2).set(controle_das_funcao_info_2)
 
-
-            
     def closeEvent(self, event):
         self.save_config()
         event.accept()
@@ -985,7 +912,7 @@ class GlobalBenchmarkWindow(QWidget, Ui_GlobalBenchmarkWindow):
         self.setupUi(self)
         self.setWindowTitle('Global Benchmark Information')
         self.load_global_benchmark_data()
-        
+
     def load_global_benchmark_data(self):
         ref = db.reference('global_benchmark')
         keys = ref.get(shallow=True)
@@ -997,7 +924,7 @@ class GlobalBenchmarkWindow(QWidget, Ui_GlobalBenchmarkWindow):
         for key in keys:
             user_data = ref.child(key).get()
             total_rotations += int(user_data.get('total_rotations', 0))
-            
+
             time_spent = user_data.get('time_spent', 0)
             if isinstance(time_spent, str):
                 time_spent = float(time_spent.replace(' seconds', ''))
@@ -1010,9 +937,8 @@ class GlobalBenchmarkWindow(QWidget, Ui_GlobalBenchmarkWindow):
 
         self.findChild(QLabel, 'totalRotationsLabel').setText(f"Total Rotations (Global): {total_rotations}")
         self.findChild(QLabel, 'timeSpentLabel').setText(f"Time Spent in Application (Global): {total_time_spent:.2f} seconds")
-        
-        self.update_most_used_locations(locations_count)
 
+        self.update_most_used_locations(locations_count)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
